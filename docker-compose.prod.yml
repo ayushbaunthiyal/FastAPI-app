@@ -1,0 +1,93 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: fastapi-prod-db
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: fastapi-prod-redis
+    restart: always
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi-prod-api
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Deploy limits (Docker Compose v3/Swarm or specific runtimes support this)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    command: sh -c "/app/.venv/bin/python -m app.prestart && /app/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi-prod-worker
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - api
+      - redis
+      - db
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    command: /app/.venv/bin/celery -A app.core.celery_app worker --loglevel=info
+
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi-prod-beat
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - api
+      - redis
+      - db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+    command: /app/.venv/bin/celery -A app.core.celery_app beat --loglevel=info
+
+volumes:
+  postgres_data_prod:

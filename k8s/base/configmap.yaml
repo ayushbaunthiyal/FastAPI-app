@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: fastapi-app
+data:
+  POSTGRES_Server: "postgres"
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: "app"
+  REDIS_HOST: "redis"
+  ENVIRONMENT: "production"
+  PROJECT_NAME: "FastAPI App"

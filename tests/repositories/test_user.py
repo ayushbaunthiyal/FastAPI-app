@@ -18,13 +18,13 @@ async def test_create_user(db_session: AsyncSession) -> None:
     try:
         user = await user_repo.create(
             db_session,
-            obj_in=UserCreate(
-                email=email,
-                password=password,
-                full_name="Test User",
-                is_active=True,
-                is_superuser=False,
-            ),
+            obj_in={
+                "email": email,
+                "hashed_password": "hashed_password_mock",
+                "full_name": "Test User",
+                "is_active": True,
+                "is_superuser": False,
+            },
         )
         assert user.email == email
         assert hasattr(user, "id")
@@ -39,7 +39,11 @@ async def test_get_user_by_email(db_session: AsyncSession) -> None:
     try:
         await user_repo.create(
             db_session,
-            obj_in=UserCreate(email=email, password="password", full_name="User"),
+            obj_in={
+                "email": email,
+                "hashed_password": "hashed_password_mock",
+                "full_name": "User",
+            },
         )
         user = await user_repo.get_by_email(db_session, email=email)
         assert user is not None

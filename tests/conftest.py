@@ -10,12 +10,15 @@ from sqlalchemy.pool import NullPool
 from app.core.config import settings
 from app.core.db import Base, get_db
 from app.main import app
+from app.models.user import User
+from tests.factories import create_user
 
 # Use a separate test database URL if desired, or override credentials
 # For this example, we'll assume the environment (or .env.test) provides a valid TEST_DATABASE_URL
 # In a real scenario, we might use a separate container or DB name.
 # forcing the db url to use localhost if tests are running outside docker
-TEST_DATABASE_URL = str(settings.DATABASE_URL).replace("db", "localhost")
+# TEST_DATABASE_URL = str(settings.DATABASE_URL).replace("db", "localhost")
+TEST_DATABASE_URL = str(settings.DATABASE_URL)
 
 engine_test = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool)
 AsyncSessionLocalTest = async_sessionmaker(bind=engine_test, class_=AsyncSession, expire_on_commit=False)
@@ -62,3 +65,15 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(scope="function")
+async def normal_user(db_session: AsyncSession) -> User:
+    """Create a normal user."""
+    return await create_user(db_session, is_superuser=False)
+
+
+@pytest.fixture(scope="function")
+async def superuser(db_session: AsyncSession) -> User:
+    """Create a superuser."""
+    return await create_user(db_session, is_superuser=True)

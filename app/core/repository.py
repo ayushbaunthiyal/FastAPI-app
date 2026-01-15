@@ -28,8 +28,11 @@ class BaseRepository[ModelType, CreateSchemaType, UpdateSchemaType]:
         )
         return list(result.scalars().all())
 
-    async def create(self, db: AsyncSession, *, obj_in: CreateSchemaType) -> ModelType:
-        obj_in_data = obj_in.model_dump()  # type: ignore
+    async def create(self, db: AsyncSession, *, obj_in: CreateSchemaType | dict[str, Any]) -> ModelType:
+        if isinstance(obj_in, dict):
+            obj_in_data = obj_in
+        else:
+            obj_in_data = obj_in.model_dump()  # type: ignore
         db_obj = self.model(**obj_in_data)
         db.add(db_obj)
         await db.commit()

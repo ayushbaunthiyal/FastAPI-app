@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+namespace: fastapi-app-dev
+
+patches:
+  - path: map-config.yaml
+    target:
+      kind: ConfigMap
+      name: app-config
+
+# In Dev, we might want to scale down to save resources
+replicas:
+  - name: api
+    count: 1
+  - name: worker
+    count: 1
