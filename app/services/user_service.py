@@ -16,8 +16,16 @@ class UserService(BaseService[User, UserCreate, UserUpdate]):
         return await self.repository.get_by_email(db, email=email)
 
     async def create_user(self, db: AsyncSession, obj_in: UserCreate) -> User:
-        obj_in.password = get_password_hash(obj_in.password)
-        return await self.create(db, obj_in=obj_in)
+        hashed_password = get_password_hash(obj_in.password)
+        db_obj = User(
+            email=obj_in.email,
+            hashed_password=hashed_password,
+            full_name=obj_in.full_name,
+        )
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+        return db_obj
 
     async def authenticate(self, db: AsyncSession, email: str, password: str) -> User | None:
         user = await self.get_by_email(db, email=email)

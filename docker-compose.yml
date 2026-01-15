@@ -10,6 +10,7 @@ services:
       - .env
     volumes:
       - .:/app
+      - /app/.venv
     depends_on:
       db:
         condition: service_healthy
@@ -17,7 +18,7 @@ services:
         condition: service_healthy
     networks:
       - app_network
-    command: bash -c "uv sync && uv run python app/backend_pre_start.py && uv run fastapi run app/main.py --host 0.0.0.0 --port 8000 --reload"
+    command: bash -c "uv sync && uv run python app/prestart.py && uv run fastapi run app/main.py --host 0.0.0.0 --port 8000 --reload"
 
   db:
     image: postgres:15-alpine

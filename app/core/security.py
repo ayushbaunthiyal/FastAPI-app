@@ -1,12 +1,11 @@
+"""Security utilities for password hashing and JWT token handling."""
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from jose import jwt as jwt
-from passlib.context import CryptContext
+import bcrypt
+from jose import jwt
 
 from app.core.config import settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 ALGORITHM = "HS256"
 
@@ -14,6 +13,7 @@ ALGORITHM = "HS256"
 def create_access_token(
     subject: str | Any, expires_delta: timedelta | None = None
 ) -> str:
+    """Create a JWT access token."""
     if expires_delta:
         expire = datetime.now(UTC) + expires_delta
     else:
@@ -26,8 +26,16 @@ def create_access_token(
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bool(pwd_context.verify(plain_password, hashed_password))
+    """Verify a plain password against a hashed password."""
+    password_bytes = plain_password.encode("utf-8")
+    hashed_bytes = hashed_password.encode("utf-8")
+    return bcrypt.checkpw(password_bytes, hashed_bytes)
 
 
 def get_password_hash(password: str) -> str:
-    return str(pwd_context.hash(password))
+    """Hash a password using bcrypt."""
+    # Truncate to 72 bytes (bcrypt limit)
+    password_bytes = password.encode("utf-8")[:72]
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode("utf-8")
