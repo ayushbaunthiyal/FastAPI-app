@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from redis import asyncio as aioredis
 from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -76,6 +77,9 @@ register_exception_handlers(app)
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Instrument Prometheus
+Instrumentator().instrument(app).expose(app)
 
 
 # Request ID Middleware (must be first to set request_id for other middleware)

@@ -11,13 +11,13 @@ ENV UV_PYTHON=python3.12
 
 # Install dependencies
 # Copy only requirements to cache them in docker layer
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-install-project --no-dev
+COPY pyproject.toml ./
+RUN uv sync --no-install-project --no-dev
 
 # Copy the rest of the application
 COPY . .
 # Sync the project itself (install app package)
-RUN uv sync --frozen --no-dev
+RUN uv sync --no-dev
 
 # Stage 2: Runtime
 FROM python:3.12-slim-bookworm
