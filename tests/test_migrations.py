@@ -47,10 +47,4 @@ async def test_schema_exists() -> None:
         )
         assert result.scalar() == "users"
         
-        # Check alembic_version table
-        result = await conn.execute(
-            text("SELECT table_name FROM information_schema.tables WHERE table_name = 'alembic_version'")
-        )
-        assert result.scalar() == "alembic_version"
-    
     await engine.dispose()

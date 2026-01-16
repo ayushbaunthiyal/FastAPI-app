@@ -26,3 +26,26 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  app-test:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: fastapi-app-test
+    environment:
+      - ENVIRONMENT=test
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db-test:5432/app_test
+      - REDIS_URL=redis://redis-test:6379/0
+      - SECRET_KEY=test_secret_key
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=app_test
+    volumes:
+      - .:/app
+      - /app/.venv
+    depends_on:
+      db-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    command: sh -c "uv sync --all-extras --dev && uv run pytest tests"

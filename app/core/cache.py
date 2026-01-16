@@ -83,7 +83,12 @@ def make_cache_key(prefix: str, *args: Any, **kwargs: Any) -> str:
     return f"{prefix}:{key_hash}"
 
 
-def cached(prefix: str, ttl: int = 300, exclude_kwargs: list[str] | None = None) -> Callable[[F], F]:
+def cached(
+    prefix: str,
+    ttl: int = 300,
+    exclude_kwargs: list[str] | None = None,
+    exclude_args_indices: list[int] | None = None,
+) -> Callable[[F], F]:
     """
     Decorator to cache function results in Redis.
 
@@ -91,14 +96,20 @@ def cached(prefix: str, ttl: int = 300, exclude_kwargs: list[str] | None = None)
         prefix: Cache key prefix
         ttl: Time to live in seconds (default: 5 minutes)
         exclude_kwargs: List of keyword argument names to exclude from cache key
+        exclude_args_indices: List of positional argument indices to exclude from cache key (0-based, including self)
     """
     exclude = set(exclude_kwargs or [])
+    exclude_indices = set(exclude_args_indices or [])
 
     def decorator(func: F) -> F:
         @functools.wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            # Skip first arg if it's likely self/cls
-            cache_args = args[1:] if args else args
+            # Filter args for cache key generation
+            # self is usually args[0], verify indices matches your usage
+            cache_args = tuple(
+                arg for i, arg in enumerate(args)
+                if i not in exclude_indices and (i > 0)  # Always skip self (index 0)
+            )
             
             # Filter excluded kwargs (like db session)
             cache_kwargs = {k: v for k, v in kwargs.items() if k not in exclude}

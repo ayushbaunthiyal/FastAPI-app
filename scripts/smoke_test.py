@@ -15,6 +15,17 @@ async def test_health():
         except Exception as e:
             print(f"Health check connection failed: {e}")
             return False
+            
+    async with httpx.AsyncClient(base_url=BASE_URL) as client:
+        try:
+            response = await client.get("/metrics")
+            print(f"Metrics Check: {response.status_code}")
+            if response.status_code != 200:
+                print("Metrics check failed!")
+                return False
+        except Exception as e:
+            print(f"Metrics check connection failed: {e}")
+            return False
     return True
 
 async def main():

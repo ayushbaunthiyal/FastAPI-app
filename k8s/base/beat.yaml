@@ -23,6 +23,11 @@ spec:
                 name: app-secrets
             - configMapRef:
                 name: app-config
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
           resources:
             requests:
               memory: "128Mi"

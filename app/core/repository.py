@@ -20,6 +20,7 @@ class BaseRepository[ModelType, CreateSchemaType, UpdateSchemaType]:
         return result.scalars().first()
 
     async def get_multi(self, db: AsyncSession, *, skip: int = 0, limit: int = 100) -> list[ModelType]:
+        limit = min(limit, 100)  # Safeguard: Force max limit to 100
         result = await db.execute(
             select(self.model)
             .filter(~self.model.is_deleted)  # type: ignore

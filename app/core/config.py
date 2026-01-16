@@ -15,9 +15,18 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    DOMAIN: str = "localhost"
+    ENVIRONMENT: str = "local"
+    # HTTPS Security
+    HTTPS_REDIRECT: bool = False
+    HSTS_SECONDS: int = 31536000  # 1 year
+    HSTS_INCLUDE_SUBDOMAINS: bool = True
+    HSTS_PRELOAD: bool = True
 
     # Database
     DATABASE_URL: PostgresDsn | str
+    POSTGRES_POOL_SIZE: int = 20
+    POSTGRES_MAX_OVERFLOW: int = 10
 
     # Redis
     REDIS_URL: RedisDsn | str
